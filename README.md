@@ -1,50 +1,112 @@
-# Welcome to your Expo app 👋
+# Gestly - Aplicación de Gestión de Ventas
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Descripción General
 
-## Get started
+Gestly es una aplicación móvil desarrollada con Expo que permite a los usuarios gestionar sus ventas, productos e inventario de manera eficiente. Diseñada para pequeños y medianos negocios, Gestly ofrece una solución completa para el control de ventas con una interfaz intuitiva y fácil de usar.
 
-1. Install dependencies
+## Características Principales
 
-   ```bash
-   npm install
-   ```
+La aplicación cuenta con 5 secciones principales:
 
-2. Start the app
+### 🏠 Home
+Centro de control donde el usuario puede ver un resumen de su actividad, estadísticas rápidas y accesos directos a las funciones más utilizadas.
 
-   ```bash
-   npx expo start
-   ```
+### 📦 Productos
+Gestión completa del catálogo de productos:
+- Agregar, editar y eliminar productos
+- Control de inventario
+- Categorización de productos
+- Precios y descuentos
 
-In the output, you'll find options to open the app in a
+### 💰 Ventas
+Registro y gestión de transacciones:
+- Crear nuevas ventas
+- Historial de ventas
+- Estado de pedidos
+- Facturación
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### 📊 Reportes
+Análisis detallado del negocio:
+- Ventas por período
+- Productos más vendidos
+- Tendencias de ventas
+- Exportación de informes
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 👤 Perfil
+Configuración de la cuenta y preferencias:
+- Información personal
+- Configuración de la tienda
+- Gestión de suscripción
+- Preferencias de la aplicación
 
-## Get a fresh project
+## Sistema de Autenticación y Suscripción
 
-When you're ready, run:
+Gestly funciona bajo un modelo de suscripción mensual:
+- Los usuarios deben registrarse para crear una cuenta
+- Se requiere una suscripción activa para acceder a todas las funcionalidades
+- Diferentes planes disponibles según las necesidades del negocio
 
-```bash
-npm run reset-project
+## Estructura del Proyecto
+
+```
+src/ 
+ ├── api/              # Servicios de API y comunicación con el backend
+ │ 
+ ├── screens/          # Pantallas principales de la aplicación
+ │   ├── Home/         # Pantalla de inicio
+ │   │   ├── hooks/    # Hooks personalizados para la pantalla Home
+ │   │   ├── services/ # Servicios específicos para Home
+ │   │   └── components/ # Componentes exclusivos de Home
+ │   │ 
+ │   ├── Products/     # Gestión de productos
+ │   │   ├── hooks/
+ │   │   ├── services/
+ │   │   └── components/
+ │   │ 
+ │   ├── Sales/        # Registro y gestión de ventas
+ │   │   ├── hooks/
+ │   │   ├── services/
+ │   │   └── components/
+ │   │ 
+ │   ├── Reports/      # Reportes y análisis
+ │   │   ├── hooks/
+ │   │   ├── services/
+ │   │   └── components/
+ │   │ 
+ │   └── Settings/     # Configuración y perfil de usuario
+ │       ├── hooks/
+ │       ├── services/
+ │       └── components/
+ │ 
+ └── shared/           # Recursos compartidos entre pantallas
+     ├── components/   # Componentes reutilizables
+     ├── hooks/        # Hooks comunes
+     ├── services/     # Servicios generales
+     └── config/       # Configuraciones globales
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Flujo de Trabajo con Git
 
-## Learn more
+El proyecto utiliza un flujo de trabajo basado en ramas:
 
-To learn more about developing your project with Expo, look at the following resources:
+- **main**: Rama de producción, contiene código estable y listo para producción
+- **develop**: Rama principal de desarrollo, integra las nuevas características
+- **features/**: Ramas para desarrollo de nuevas funcionalidades
+- **bugfix/**: Ramas para corrección de errores
+- **refactor/**: Ramas para refactorización de código existente
+- **test/**: Ramas para pruebas de nuevas implementaciones
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Tecnologías Utilizadas
 
-## Join the community
+- React Native
+- Expo
+- TypeScript
+- [Otras tecnologías específicas del proyecto]
 
-Join our community of developers creating universal apps.
+## Requisitos de Instalación
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+[Instrucciones para instalar y ejecutar el proyecto localmente]
+
+## Equipo de Desarrollo
+
+[Información sobre el equipo de desarrollo]
