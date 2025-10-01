@@ -1,5 +1,5 @@
+import { Session, User } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
 import { AuthService } from '../../screens/Auth/services/authService';
 
 interface AuthContextType {
@@ -57,7 +57,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    setLoading(true);
     try {
       const response = await AuthService.signIn({ email, password });
       if (response.error) {
@@ -68,13 +67,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('SignIn catch error:', error);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string) => {
-    setLoading(true);
     try {
       const response = await AuthService.signUp({ email, password });
       if (response.error) {
@@ -85,17 +81,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('SignUp catch error:', error);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
   const signOut = async () => {
-    setLoading(true);
     try {
       await AuthService.signOut();
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('SignOut error:', error);
     }
   };
 

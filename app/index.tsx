@@ -21,7 +21,7 @@ export default function IndexScreen() {
   // Mostrar loading mientras se verifica la autenticación
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#fff" />
+      <ActivityIndicator size="large" color="#007AFF" />
     </View>
   );
 }

@@ -1,29 +1,26 @@
+import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { router } from 'expo-router';
-import { CustomInput, CustomButton } from './components';
-import { useAuth } from './hooks/useAuth';
 import { ErrorMessage } from '../../shared/components/ErrorMessage';
-import { LoadingScreen } from '../../shared/components/LoadingScreen';
-import { FullScreenLoading } from '../../shared/components/FullScreenLoading';
 import { PasswordInput } from '../../shared/components/PasswordInput';
 import { Colors } from '../../shared/config/colors';
+import { CustomButton, CustomInput } from './components';
+import { useAuth } from './hooks/useAuth';
 
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [showLoading, setShowLoading] = useState(false);
   const [buttonLoading, setButtonLoading] = useState(false);
-  const { signIn, loading } = useAuth();
+  const { signIn } = useAuth();
 
   const handleLogin = async () => {
     // Limpiar errores previos
@@ -37,9 +34,6 @@ export const LoginScreen: React.FC = () => {
     try {
       setButtonLoading(true);
       await signIn({ email, password });
-      setButtonLoading(false);
-      setShowLoading(true);
-      // La navegación se manejará automáticamente por el contexto de autenticación
     } catch (error: any) {
       setButtonLoading(false);
       const errorMessage = error.message || 'Ocurrió un error al iniciar sesión';
@@ -64,7 +58,6 @@ export const LoginScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <FullScreenLoading visible={showLoading} />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
