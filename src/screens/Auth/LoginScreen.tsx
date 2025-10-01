@@ -10,14 +10,51 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { CustomInput, CustomButton } from './components';
+import { useAuth } from './hooks/useAuth';
+import { ErrorMessage } from '../../shared/components/ErrorMessage';
+import { LoadingScreen } from '../../shared/components/LoadingScreen';
+import { FullScreenLoading } from '../../shared/components/FullScreenLoading';
+import { PasswordInput } from '../../shared/components/PasswordInput';
+import { Colors } from '../../shared/config/colors';
 
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [showLoading, setShowLoading] = useState(false);
+  const [buttonLoading, setButtonLoading] = useState(false);
+  const { signIn, loading } = useAuth();
 
-  const handleLogin = () => {
-    // Lógica de login aquí
-    console.log('Login attempt:', { email, password });
+  const handleLogin = async () => {
+    // Limpiar errores previos
+    setLoginError('');
+
+    if (!email || !password) {
+      setLoginError('Por favor completa todos los campos');
+      return;
+    }
+
+    try {
+      setButtonLoading(true);
+      await signIn({ email, password });
+      setButtonLoading(false);
+      setShowLoading(true);
+      // La navegación se manejará automáticamente por el contexto de autenticación
+    } catch (error: any) {
+      setButtonLoading(false);
+      const errorMessage = error.message || 'Ocurrió un error al iniciar sesión';
+      
+      // Personalizar mensajes de error comunes
+      if (errorMessage.includes('Invalid login credentials')) {
+        setLoginError('Email o contraseña incorrectos');
+      } else if (errorMessage.includes('Email not confirmed')) {
+        setLoginError('Por favor confirma tu email antes de iniciar sesión');
+      } else if (errorMessage.includes('User not found')) {
+        setLoginError('No existe una cuenta con este email');
+      } else {
+        setLoginError(errorMessage);
+      }
+    }
   };
 
   const handleRegister = () => {
@@ -27,6 +64,7 @@ export const LoginScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <FullScreenLoading visible={showLoading} />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -48,17 +86,24 @@ export const LoginScreen: React.FC = () => {
               autoCapitalize="none"
             />
             
-            <CustomInput
+            <PasswordInput
               placeholder="Contraseña"
               value={password}
               onChangeText={setPassword}
-              secureTextEntry
+              containerStyle={styles.passwordContainer}
+            />
+
+            <ErrorMessage 
+              message={loginError} 
+              visible={!!loginError} 
             />
 
             <CustomButton
               title="Iniciar Sesión"
               onPress={handleLogin}
               variant="primary"
+              loading={buttonLoading}
+              disabled={buttonLoading}
             />
           </View>
 
@@ -78,7 +123,7 @@ export const LoginScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: Colors.background,
   },
   keyboardView: {
     flex: 1,
@@ -90,21 +135,24 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 60,
+    marginBottom: 48,
   },
   title: {
-    fontSize: 48,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Colors.textPrimary,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#999',
+    color: Colors.textSecondary,
     textAlign: 'center',
   },
   form: {
-    marginBottom: 40,
+    marginBottom: 32,
+  },
+  passwordContainer: {
+    marginBottom: 24,
   },
   footer: {
     flexDirection: 'row',
@@ -112,11 +160,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    color: '#999',
+    color: Colors.textSecondary,
     fontSize: 16,
   },
   registerLink: {
-    color: '#fff',
+    color: Colors.primary,
     fontSize: 16,
     fontWeight: '600',
   },

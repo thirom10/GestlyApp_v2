@@ -11,15 +11,63 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { CustomInput, CustomButton } from './components';
+import { useAuth } from './hooks/useAuth';
+import { ErrorMessage } from '../../shared/components/ErrorMessage';
+import { showToast } from '../../shared/components/Toast';
+import { PasswordInput } from '../../shared/components/PasswordInput';
+import { Colors } from '../../shared/config/colors';
 
 export const RegisterScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [generalError, setGeneralError] = useState('');
+  const { signUp, loading } = useAuth();
 
-  const handleSubscribe = () => {
-    // Lógica de suscripción aquí
-    console.log('Subscribe attempt:', { email, password, confirmPassword });
+  const validateEmail = (email: string): boolean => {
+    return email.includes('@') && email.includes('.');
+  };
+
+  const handleSubscribe = async () => {
+    // Limpiar errores previos
+    setPasswordError('');
+    setGeneralError('');
+
+    if (!email || !password || !confirmPassword) {
+      setGeneralError('Por favor completa todos los campos');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setGeneralError('Por favor ingresa un email válido');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setPasswordError('Las contraseñas no coinciden');
+      return;
+    }
+
+    if (password.length < 6) {
+      setPasswordError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    try {
+      await signUp({ email, password });
+      showToast.success(
+        'Registro Exitoso',
+        'Usuario registrado correctamente'
+      );
+      // Pequeño delay para que se vea la notificación antes de navegar
+      setTimeout(() => {
+        router.push('/(auth)/login');
+      }, 2000);
+    } catch (error: any) {
+      setGeneralError(error.message || 'Ocurrió un error al registrarse');
+      showToast.error('Error de Registro', error.message || 'Ocurrió un error al registrarse');
+    }
   };
 
   const handleLogin = () => {
@@ -69,24 +117,36 @@ export const RegisterScreen: React.FC = () => {
                 autoCapitalize="none"
               />
               
-              <CustomInput
+              <PasswordInput
                 placeholder="Contraseña"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry
+                containerStyle={styles.passwordContainer}
               />
 
-              <CustomInput
+              <PasswordInput
                 placeholder="Confirmar Contraseña"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                secureTextEntry
+                containerStyle={styles.passwordContainer}
+              />
+
+              <ErrorMessage 
+                message={passwordError} 
+                visible={!!passwordError} 
+              />
+
+              <ErrorMessage 
+                message={generalError} 
+                visible={!!generalError} 
+                style={styles.generalError}
               />
 
               <CustomButton
-                title="Suscribirse Ahora"
+                title={loading ? "Registrando..." : "Suscribirse Ahora"}
                 onPress={handleSubscribe}
                 variant="primary"
+                disabled={loading}
               />
             </View>
 
@@ -107,7 +167,7 @@ export const RegisterScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: Colors.background,
   },
   keyboardView: {
     flex: 1,
@@ -127,21 +187,21 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Colors.textPrimary,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#999',
+    color: Colors.textSecondary,
     textAlign: 'center',
   },
   pricingCard: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: Colors.backgroundSecondary,
     borderRadius: 16,
     padding: 24,
     marginBottom: 40,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: Colors.border,
   },
   priceContainer: {
     flexDirection: 'row',
@@ -152,17 +212,17 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Colors.textPrimary,
   },
   currency: {
     fontSize: 18,
-    color: '#999',
+    color: Colors.textSecondary,
     marginLeft: 4,
   },
   planTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -175,12 +235,19 @@ const styles = StyleSheet.create({
   },
   additionalInfo: {
     fontSize: 12,
-    color: '#999',
+    color: Colors.textSecondary,
     textAlign: 'center',
     fontStyle: 'italic',
   },
   form: {
     marginBottom: 30,
+  },
+  passwordContainer: {
+    marginBottom: 16,
+  },
+  generalError: {
+    marginTop: 8,
+    marginBottom: 20,
   },
   footer: {
     flexDirection: 'row',
@@ -188,11 +255,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    color: '#999',
+    color: Colors.textSecondary,
     fontSize: 16,
   },
   loginLink: {
-    color: '#fff',
+    color: Colors.primary,
     fontSize: 16,
     fontWeight: '600',
   },
