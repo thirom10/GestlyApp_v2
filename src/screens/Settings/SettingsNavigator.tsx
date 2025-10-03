@@ -3,7 +3,7 @@ import React from 'react';
 import AccountScreen from './AccountScreen';
 import SettingsScreen from './SettingsScreen';
 import SubscriptionScreen from './SubscriptionScreen';
-import AppearanceModal from './components/AppearenceModal';
+import AppearanceModal from './components/AppearanceModal';
 import { SettingsStackParamList } from './types/navigation';
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
