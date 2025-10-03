@@ -5,7 +5,7 @@ import { Colors } from '../shared/config/colors';
 
 // Importar las pantallas
 import HomeScreen from './Home/HomeScreen';
-import ProductsScreen from './Products/ProductsScreen';
+import ProductsNavigator from './Products/ProductsNavigator';
 import ReportsScreen from './Reports/ReportsScreen';
 import SettingsScreen from './Settings/SettingsScreen';
 
@@ -68,9 +68,9 @@ export default function MainNavigator() {
       />
       <Tab.Screen 
         name="Productos" 
-        component={ProductsScreen}
+        component={ProductsNavigator}
         options={{
-          headerTitle: 'Productos',
+          headerShown: false, // El ProductsNavigator manejará su propio header
         }}
       />
       <Tab.Screen 
