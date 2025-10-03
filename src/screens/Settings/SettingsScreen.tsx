@@ -1,105 +1,95 @@
+// src/screens/Settings/SettingsScreen.tsx
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  StatusBar,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Alert, SafeAreaView, StyleSheet, View } from 'react-native';
 import { Colors } from '../../shared/config/colors';
-import { useAuth } from '../Auth/hooks/useAuth';
+import { useAuthContext } from '../../shared/context/AuthContext';
+import SettingRow from './components/SettingRow';
+import { SettingsStackParamList } from './types/navigation';
+
+type NavigationProp = NativeStackNavigationProp<SettingsStackParamList>;
 
 export default function SettingsScreen() {
-  const { signOut } = useAuth();
+  const navigation = useNavigation<NavigationProp>();
+  const { signOut } = useAuthContext();
 
   const handleLogout = () => {
     Alert.alert(
-      'Cerrar Sesión',
-      '¿Estás seguro de que quieres cerrar sesión?',
+      "Cerrar Sesión",
+      "¿Estás seguro que deseas cerrar sesión?",
       [
         {
-          text: 'Cancelar',
-          style: 'cancel',
+          text: "Cancelar",
+          style: "cancel"
         },
         {
-          text: 'Cerrar Sesión',
+          text: "Cerrar Sesión",
           style: 'destructive',
-          onPress: () => {
-            signOut();
-          },
-        },
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch (error) {
+              console.error('Error al cerrar sesión:', error);
+            }
+          }
+        }
       ]
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
-      
-      <View style={styles.content}>
-        <Text style={styles.title}>Usuario</Text>
-        
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={styles.logoutButton}
-            onPress={handleLogout}
-            activeOpacity={0.8}
-          >
-            <Ionicons 
-              name="log-out-outline" 
-              size={20} 
-              color={Colors.textPrimary} 
-              style={styles.buttonIcon}
-            />
-            <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.list}>
+        <SettingRow
+          icon="person-outline"
+          label="Información de cuenta"
+          onPress={() => navigation.navigate('Account')}
+        />
+
+        <SettingRow
+          icon="card-outline"
+          label="Gestionar Suscripción"
+          onPress={() => navigation.navigate('Subscription')}
+        />
+
+        <SettingRow
+          icon="color-palette-outline"
+          label="Cambiar Apariencia"
+          onPress={() => navigation.navigate('AppearanceModal')}
+        />
+
+        <View style={styles.separator} />
+
+        <SettingRow
+          icon="log-out-outline"
+          label="Cerrar Sesión"
+          onPress={handleLogout}
+          textColor={Colors.error}
+          showBorder={true}
+        />
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
+  container: { 
+    flex: 1, 
+    backgroundColor: Colors.background, 
+    padding: 20 
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
+  title: { 
+    color: Colors.textPrimary, 
+    fontSize: 24, 
+    fontWeight: '600', 
+    marginBottom: 20
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: 40,
+  list: { 
+    paddingTop: 10, 
+    paddingHorizontal: 6 
   },
-  buttonContainer: {
-    width: '100%',
-    maxWidth: 300,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.error,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginTop: 20,
-  },
-  buttonIcon: {
-    marginRight: 8,
-  },
-  logoutButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-  },
+  separator: {
+    height: 20
+  }
 });
