@@ -7,7 +7,7 @@ import { Colors } from '../shared/config/colors';
 import HomeScreen from './Home/HomeScreen';
 import ProductsScreen from './Products/ProductsScreen';
 import ReportsScreen from './Reports/ReportsScreen';
-import SettingsScreen from './Settings/SettingsScreen';
+import SettingsNavigator from './Settings/SettingsNavigator'; // <-- Paso de SettingsScreen a SettingsNavigator
 
 const Tab = createBottomTabNavigator();
 
@@ -82,9 +82,9 @@ export default function MainNavigator() {
       />
       <Tab.Screen 
         name="Usuario" 
-        component={SettingsScreen}
+        component={SettingsNavigator} // ← CAMBIO AQUÍ: usar SettingsNavigator en lugar de SettingsScreen
         options={{
-          headerTitle: 'Usuario',
+          headerShown: false, // ← IMPORTANTE: ocultar el header del tab para que use el del stack
         }}
       />
     </Tab.Navigator>
