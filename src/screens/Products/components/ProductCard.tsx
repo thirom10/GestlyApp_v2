@@ -1,5 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../shared/config/colors';
 import { Product } from '../services/productService';
@@ -32,6 +37,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
@@ -55,91 +61,86 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <TouchableOpacity
       style={styles.container}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
+      {/* Lápiz en esquina superior derecha */}
+      {onEdit && (
+        <TouchableOpacity
+          style={styles.editCorner}
+          onPress={onEdit}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="pencil" size={16} color={Colors.textSecondary} />
+        </TouchableOpacity>
+      )}
+
       <View style={styles.content}>
-        {/* Header con nombre y acciones */}
+        {/* Header: nombre */}
         <View style={styles.header}>
           <Text style={styles.name} numberOfLines={2}>
             {product.name}
           </Text>
-          <View style={styles.actions}>
-            {onEdit && (
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={onEdit}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="pencil" size={16} color={Colors.textSecondary} />
-              </TouchableOpacity>
-            )}
-            {onDelete && (
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={onDelete}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Ionicons name="trash-outline" size={16} color={Colors.error} />
-              </TouchableOpacity>
-            )}
-          </View>
+
+          {/* Trash (opcional) */}
+          {onDelete && (
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={onDelete}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="trash-outline" size={16} color={Colors.error} />
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* Información principal */}
-        <View style={styles.mainInfo}>
-          <View style={styles.priceSection}>
-            <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Compra:</Text>
-              <Text style={styles.purchasePrice}>{formatPrice(product.purchase_price)}</Text>
-            </View>
-            <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Venta:</Text>
-              <Text style={styles.salePrice}>{formatPrice(product.sale_price)}</Text>
-            </View>
+        {/* Main row: Precio a la izquierda, Stock a la derecha */}
+        <View style={styles.mainRow}>
+          <View style={styles.priceBlock}>
+            <Text style={styles.priceLabel}>Precio</Text>
+            <Text style={styles.salePrice}>{formatPrice(product.sale_price)}</Text>
           </View>
 
-          <View style={styles.stockSection}>
+          <View style={styles.stockBlock}>
             <View style={styles.stockRow}>
-              <Text style={styles.stockLabel}>Stock:</Text>
-              <Text style={styles.stockValue}>{product.stock}</Text>
+              <View style={[styles.stockDot, { backgroundColor: stockStatus.color }]} />
+              <Text style={styles.stockText}>{product.stock} unidades</Text>
             </View>
-            <View style={[styles.stockStatus, { backgroundColor: stockStatus.color + '20' }]}>
-              <Text style={[styles.stockStatusText, { color: stockStatus.color }]}>
+
+            <View style={[styles.stockBadge, { backgroundColor: `${stockStatus.color}22` }]}>
+              <Text style={[styles.stockBadgeText, { color: stockStatus.color }]}>
                 {stockStatus.text}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Información adicional */}
-        <View style={styles.additionalInfo}>
+        {/* Additional info line */}
+        <View style={styles.infoLine}>
           {weight && (
             <View style={styles.infoItem}>
               <Ionicons name="scale-outline" size={14} color={Colors.textSecondary} />
               <Text style={styles.infoText}>{weight}</Text>
             </View>
           )}
-          
+
           {product.branch && (
-            <View style={styles.infoItem}>
+            <View style={[styles.infoItem, { marginLeft: 14 }]}>
               <Ionicons name="business-outline" size={14} color={Colors.textSecondary} />
               <Text style={styles.infoText}>{product.branch}</Text>
             </View>
           )}
-          
+
           {product.purchase_date && (
-            <View style={styles.infoItem}>
+            <View style={[styles.infoItem, { marginLeft: 14 }]}>
               <Ionicons name="calendar-outline" size={14} color={Colors.textSecondary} />
               <Text style={styles.infoText}>Comprado: {formatDate(product.purchase_date)}</Text>
             </View>
           )}
         </View>
 
-        {/* Footer con fecha de creación */}
+        {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.createdDate}>
-            Agregado: {formatDate(product.created_at)}
-          </Text>
+          <Text style={styles.createdDate}>Agregado: {formatDate(product.created_at)}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -154,98 +155,110 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: Colors.border,
+    position: 'relative', // para posicionar icono editCorner
   },
   content: {
-    padding: 16,
+    padding: 14,
   },
+
+  /* esquina lápiz */
+  editCorner: {
+    position: 'absolute',
+    top: 8,
+    right: 10,
+    zIndex: 10,
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 8,
+    paddingRight: 44, // espacio para el icono en esquina
   },
   name: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.textPrimary,
     flex: 1,
-    marginRight: 12,
+    marginRight: 8,
   },
-  actions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButton: {
+  deleteButton: {
     padding: 4,
   },
-  mainInfo: {
+
+  mainRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  priceSection: {
+
+  priceBlock: {
     flex: 1,
   },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  priceLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
     marginBottom: 4,
   },
-  priceLabel: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    width: 60,
-  },
-  purchasePrice: {
-    fontSize: 14,
-    color: Colors.textPrimary,
-    fontWeight: '500',
-  },
   salePrice: {
-    fontSize: 14,
+    fontSize: 18,
     color: Colors.primary,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  stockSection: {
+
+  stockBlock: {
     alignItems: 'flex-end',
+    minWidth: 110,
   },
   stockRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  stockLabel: {
-    fontSize: 14,
-    color: Colors.textSecondary,
+  stockDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     marginRight: 8,
   },
-  stockValue: {
-    fontSize: 16,
+  stockText: {
+    fontSize: 14,
     color: Colors.textPrimary,
     fontWeight: '600',
   },
-  stockStatus: {
+  stockBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
-  stockStatusText: {
+  stockBadgeText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  additionalInfo: {
-    gap: 6,
+
+  infoLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
+    flexWrap: 'wrap',
   },
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
   },
   infoText: {
     fontSize: 13,
     color: Colors.textSecondary,
+    marginLeft: 6,
   },
+
   footer: {
     borderTopWidth: 1,
     borderTopColor: Colors.border,
