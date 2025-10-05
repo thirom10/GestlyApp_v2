@@ -1,11 +1,11 @@
 import ProtectedRoute from '@/components/ProtectedRoute';
-import ProductsNavigator from '@/src/screens/Products/ProductsNavigator';
+import SettingsNavigator from '@/src/screens/Settings/SettingsNavigator';
 import React from 'react';
 
-export default function ProductsTab() {
+export default function UsuarioTab() {
   return (
     <ProtectedRoute>
-      <ProductsNavigator />
+      <SettingsNavigator />
     </ProtectedRoute>
   );
 }
