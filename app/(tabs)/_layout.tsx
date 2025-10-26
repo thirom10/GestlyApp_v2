@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, Tabs } from 'expo-router';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function SalesButton() {
   const { state } = useCart();
@@ -76,6 +77,8 @@ function SalesButton() {
 }
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <>
       <Tabs
@@ -86,9 +89,9 @@ export default function TabLayout() {
             backgroundColor: Colors.backgroundSecondary,
             borderTopColor: Colors.border,
             borderTopWidth: 1,
-            paddingBottom: 5,
+            paddingBottom: insets.bottom || 5,
             paddingTop: 5,
-            height: 60,
+            height: 60 + (insets.bottom || 0),
           },
           tabBarLabelStyle: {
             fontSize: 12,
