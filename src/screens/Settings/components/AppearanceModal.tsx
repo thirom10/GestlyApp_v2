@@ -1,9 +1,10 @@
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../../../shared/config/colors';
 import { SettingsStackParamList } from '../types/navigation';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type NavigationProp = NativeStackNavigationProp<SettingsStackParamList>;
 
@@ -11,17 +12,36 @@ export default function AppearanceModal() {
   const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Cambiar Apariencia</Text>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-        <Text style={styles.closeText}>Cerrar</Text>
-      </TouchableOpacity>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+       <Text style={styles.text}>Aqui puede cambiarse la apariencia de la app.</Text>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: Colors.background, padding: 20, borderTopLeftRadius: 12, borderTopRightRadius: 12 },
-  title: { color: Colors.textPrimary, fontSize: 18, marginBottom: 12 },
-  closeText: { color: Colors.primary },
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 10,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  text: {
+    color: Colors.textPrimary,
+  }
 });

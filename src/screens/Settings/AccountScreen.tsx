@@ -1,39 +1,13 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
-import {
-  SafeAreaView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {SafeAreaView, StatusBar, StyleSheet, Text, View} from 'react-native';
 import { Colors } from '../../shared/config/colors';
-import { SettingsStackParamList } from './types/navigation';
-
-type NavigationProp = NativeStackNavigationProp<SettingsStackParamList>;
 
 export default function AccountScreen() {
-  const navigation = useNavigation<NavigationProp>();
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
-      
       <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Información de cuenta</Text>
-      </View>
-
-      <View style={styles.content}>
-        {/* Contenido de la cuenta aquí */}
+        <Text style={styles.text}>Aqui puede verse información sobre su cuenta.</Text>
       </View>
     </SafeAreaView>
   );
@@ -51,10 +25,6 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 10,
   },
-  backButton: {
-    padding: 8,
-    marginRight: 16,
-  },
   content: {
     flex: 1,
     paddingHorizontal: 20,
@@ -64,4 +34,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textPrimary,
   },
+  text: {
+    color: Colors.textPrimary,
+  }
 });
