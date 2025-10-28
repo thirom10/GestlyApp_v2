@@ -14,6 +14,7 @@ interface ProductCardProps {
   onPress?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onView?: () => void;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -21,6 +22,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onPress,
   onEdit,
   onDelete,
+  onView,
 }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-AR', {
@@ -60,7 +62,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <TouchableOpacity
       style={styles.container}
-      onPress={onPress}
+      onPress={onView || onPress}
       activeOpacity={0.8}
     >
       {/* Lápiz en esquina superior derecha */}
