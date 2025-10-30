@@ -180,12 +180,6 @@ export default function AddProductScreen() {
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>
           {isViewMode ? 'Detalles del Producto' : isEditMode ? 'Editar Producto' : 'Nuevo Producto'}
         </Text>
