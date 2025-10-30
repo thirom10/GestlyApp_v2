@@ -8,6 +8,10 @@ export interface Product {
   user_id: string;
 }
 
+export interface ProductWithSales extends Product {
+  totalSold?: number;
+}
+
 export interface SaleItem {
   id: string;
   product_id: string;
@@ -26,51 +30,88 @@ export const homeService = {
   /**
    * Obtiene el producto más vendido
    */
-  async getMostSoldProduct(userId: string): Promise<Product | null> {
+  async getMostSoldProduct(userId: string): Promise<ProductWithSales | null> {
     try {
-      // Consulta para obtener los productos más vendidos con su cantidad total vendida
-      const { data: salesItems, error: salesError } = await supabase
-        .from('sale_items')
-        .select(`
-          quantity,
-          product_id,
-          sale_id,
-          sales!inner(user_id)
-        `)
-        .eq('sales.user_id', userId);
+      // Primero obtener todas las ventas del usuario ordenadas por fecha (más recientes primero)
+      const { data: userSales, error: salesError } = await supabase
+        .from('sales')
+        .select('id, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
       if (salesError) {
-        console.error('Error al obtener items de ventas:', salesError);
+        console.error('Error al obtener ventas del usuario:', salesError);
+        return null;
+      }
+
+      if (!userSales || userSales.length === 0) {
+        console.log('No hay ventas para este usuario');
+        return null;
+      }
+
+      const saleIds = userSales.map(sale => sale.id);
+
+      // Obtener todos los items de venta para las ventas del usuario
+      const { data: salesItems, error: salesItemsError } = await supabase
+        .from('sale_items')
+        .select('quantity, product_id, sale_id')
+        .in('sale_id', saleIds);
+
+      if (salesItemsError) {
+        console.error('Error al obtener items de ventas:', salesItemsError);
         return null;
       }
 
       if (!salesItems || salesItems.length === 0) {
+        console.log('No hay items de venta');
         return null;
       }
 
-      // Agrupar por producto y sumar cantidades
-      const productSales: Record<string, number> = {};
+      // Agrupar por producto y sumar cantidades, manteniendo la fecha de la venta más reciente
+      const productSales: Record<string, { quantity: number; mostRecentSaleDate: string }> = {};
+      
       salesItems.forEach(item => {
         const productId = item.product_id;
         if (productId) {
-          productSales[productId] = (productSales[productId] || 0) + (item.quantity || 0);
+          const saleDate = userSales.find(sale => sale.id === item.sale_id)?.created_at || '';
+          
+          if (!productSales[productId]) {
+            productSales[productId] = {
+              quantity: item.quantity || 0,
+              mostRecentSaleDate: saleDate
+            };
+          } else {
+            productSales[productId].quantity += (item.quantity || 0);
+            // Mantener la fecha más reciente
+            if (saleDate > productSales[productId].mostRecentSaleDate) {
+              productSales[productId].mostRecentSaleDate = saleDate;
+            }
+          }
         }
       });
 
-      // Encontrar el producto con mayor cantidad vendida
+      console.log('Ventas por producto:', productSales);
+
+      // Encontrar el producto con mayor cantidad vendida, en caso de empate, el más reciente
       let maxQuantity = 0;
       let bestSellingProductId = null;
+      let mostRecentDate = '';
 
-      Object.entries(productSales).forEach(([productId, quantity]) => {
-        if (quantity > maxQuantity) {
-          maxQuantity = quantity;
+      Object.entries(productSales).forEach(([productId, data]) => {
+        if (data.quantity > maxQuantity || 
+            (data.quantity === maxQuantity && data.mostRecentSaleDate > mostRecentDate)) {
+          maxQuantity = data.quantity;
           bestSellingProductId = productId;
+          mostRecentDate = data.mostRecentSaleDate;
         }
       });
 
       if (!bestSellingProductId) {
+        console.log('No se encontró producto más vendido');
         return null;
       }
+
+      console.log(`Producto más vendido: ${bestSellingProductId} con ${maxQuantity} unidades`);
 
       // Obtener los detalles del producto más vendido
       const { data: product, error: productError } = await supabase
@@ -84,7 +125,10 @@ export const homeService = {
         return null;
       }
 
-      return product;
+      return {
+        ...product,
+        totalSold: maxQuantity
+      };
     } catch (error) {
       console.error('Error inesperado:', error);
       return null;
@@ -122,48 +166,71 @@ export const homeService = {
     try {
       // Fechas para los cálculos
       const now = new Date();
+      
+      // Semana actual (lunes a domingo)
       const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay()); // Domingo de esta semana
+      const dayOfWeek = now.getDay();
+      const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Si es domingo (0), retroceder 6 días
+      startOfWeek.setDate(now.getDate() - daysToMonday);
       startOfWeek.setHours(0, 0, 0, 0);
       
+      // Semana pasada
       const startOfLastWeek = new Date(startOfWeek);
       startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+      const endOfLastWeek = new Date(startOfWeek);
+      endOfLastWeek.setMilliseconds(-1);
       
+      // Mes actual
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      
+      // Mes pasado
       const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      startOfLastMonth.setHours(0, 0, 0, 0);
       const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      endOfLastMonth.setHours(23, 59, 59, 999);
+
+      console.log('Fechas de cálculo:', {
+        startOfWeek: startOfWeek.toISOString(),
+        startOfLastWeek: startOfLastWeek.toISOString(),
+        endOfLastWeek: endOfLastWeek.toISOString(),
+        startOfMonth: startOfMonth.toISOString(),
+        startOfLastMonth: startOfLastMonth.toISOString(),
+        endOfLastMonth: endOfLastMonth.toISOString(),
+        now: now.toISOString()
+      });
 
       // Consulta para ventas de esta semana
       const { data: weekSales, error: weekError } = await supabase
         .from('sales')
-        .select('total_amount')
+        .select('total_amount, created_at')
         .eq('user_id', userId)
         .gte('created_at', startOfWeek.toISOString())
-        .lt('created_at', now.toISOString());
+        .lte('created_at', now.toISOString());
 
       // Consulta para ventas de la semana pasada
       const { data: lastWeekSales, error: lastWeekError } = await supabase
         .from('sales')
-        .select('total_amount')
+        .select('total_amount, created_at')
         .eq('user_id', userId)
         .gte('created_at', startOfLastWeek.toISOString())
-        .lt('created_at', startOfWeek.toISOString());
+        .lte('created_at', endOfLastWeek.toISOString());
 
       // Consulta para ventas de este mes
       const { data: monthSales, error: monthError } = await supabase
         .from('sales')
-        .select('total_amount')
+        .select('total_amount, created_at')
         .eq('user_id', userId)
         .gte('created_at', startOfMonth.toISOString())
-        .lt('created_at', now.toISOString());
+        .lte('created_at', now.toISOString());
 
       // Consulta para ventas del mes pasado
       const { data: lastMonthSales, error: lastMonthError } = await supabase
         .from('sales')
-        .select('total_amount')
+        .select('total_amount, created_at')
         .eq('user_id', userId)
         .gte('created_at', startOfLastMonth.toISOString())
-        .lt('created_at', endOfLastMonth.toISOString());
+        .lte('created_at', endOfLastMonth.toISOString());
 
       if (weekError || lastWeekError || monthError || lastMonthError) {
         console.error('Error al obtener estadísticas de ventas:', 
@@ -184,12 +251,23 @@ export const homeService = {
 
       // Calcular cambios porcentuales
       const weeklyChange = lastWeekRevenue === 0 
-        ? 0 
+        ? (weeklyRevenue > 0 ? 100 : 0)
         : ((weeklyRevenue - lastWeekRevenue) / lastWeekRevenue) * 100;
       
       const monthlyChange = lastMonthRevenue === 0 
-        ? 0 
+        ? (monthlyRevenue > 0 ? 100 : 0)
         : ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100;
+
+      console.log('Estadísticas calculadas:', {
+        weeklyRevenue,
+        lastWeekRevenue,
+        weeklyChange,
+        monthlyRevenue,
+        lastMonthRevenue,
+        monthlyChange,
+        weekSalesCount: weekSales?.length || 0,
+        monthSalesCount: monthSales?.length || 0
+      });
 
       return {
         weeklyRevenue,
@@ -205,6 +283,30 @@ export const homeService = {
         monthlyRevenue: 0,
         monthlyChange: 0
       };
+    }
+  },
+
+  /**
+   * Actualiza el stock de un producto
+   */
+  async updateProductStock(productId: string, newStock: number): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .update({ stock: newStock })
+        .eq('id', productId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error al actualizar stock:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error inesperado al actualizar stock:', error);
+      return false;
     }
   }
 };

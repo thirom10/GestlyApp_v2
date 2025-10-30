@@ -1,35 +1,78 @@
-import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../shared/config/colors';
+import { RestockModal } from './RestockModal';
 
 interface LowStockItemProps {
   item: {
+    id: string;
     name: string;
     remain: number;
     icon: string;
   };
+  onStockUpdated: (productId: string, newStock: number) => Promise<void>;
 }
 
-export function LowStockItem({ item }: LowStockItemProps) {
+export function LowStockItem({ item, onStockUpdated }: LowStockItemProps) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleRestock = () => {
+    setModalVisible(true);
+  };
+
+  const handleConfirmRestock = async (quantity: number) => {
+    setLoading(true);
+    try {
+      const newStock = item.remain + quantity;
+      await onStockUpdated(item.id, newStock);
+      setModalVisible(false);
+    } catch (error) {
+      console.error('Error al actualizar stock:', error);
+      // Aquí podrías mostrar un mensaje de error al usuario
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelRestock = () => {
+    setModalVisible(false);
+  };
+
   return (
-    <View style={styles.lowStockItem}>
-      <View style={styles.lowLeft}>
-        <View style={styles.iconCircle}>
-          <Ionicons name="cart-outline" size={20} color={Colors.primary} />
+    <>
+      <View style={styles.lowStockItem}>
+        <View style={styles.lowLeft}>
+          <View style={styles.iconCircle}>
+            <Ionicons name="cart-outline" size={20} color={Colors.primary} />
+          </View>
+          <View style={styles.lowStockTextContainer}>
+            <Text style={styles.lowName}>{item.name}</Text>
+            <Text style={styles.lowRemain}>Quedan: {item.remain}</Text>
+          </View>
         </View>
-        <View style={styles.lowStockTextContainer}>
-          <Text style={styles.lowName}>{item.name}</Text>
-          <Text style={styles.lowRemain}>Quedan: {item.remain}</Text>
-        </View>
+        <TouchableOpacity
+          style={styles.restockButton}
+          activeOpacity={0.8}
+          onPress={handleRestock}
+        >
+          <Text style={styles.restockText}>Reponer</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={styles.restockButton}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.restockText}>Reponer</Text>
-      </TouchableOpacity>
-    </View>
+
+      <RestockModal
+        visible={modalVisible}
+        product={{
+          id: item.id,
+          name: item.name,
+          stock: item.remain
+        }}
+        onConfirm={handleConfirmRestock}
+        onCancel={handleCancelRestock}
+        loading={loading}
+      />
+    </>
   );
 }
 

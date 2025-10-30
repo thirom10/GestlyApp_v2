@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  SafeAreaView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    FlatList,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { Colors } from '../../shared/config/colors';
 import { useAuthContext } from '../../shared/context/AuthContext';
@@ -20,6 +20,28 @@ export default function HomeScreen() {
   const [stats, setStats] = useState<{ id: string; label: string; value: string; change: number; positive: boolean }[]>([]);
   const [mostSoldProduct, setMostSoldProduct] = useState<{ id?: string; name: string; subtitle: string } | null>(null);
   const [lowStockProducts, setLowStockProducts] = useState<{ id: string; name: string; remain: number; icon: string }[]>([]);
+
+  const handleStockUpdate = async (productId: string, newStock: number) => {
+    try {
+      const success = await homeService.updateProductStock(productId, newStock);
+      if (success) {
+        // Actualizar el estado local
+        setLowStockProducts(prev => 
+          prev.map(product => 
+            product.id === productId 
+              ? { ...product, remain: newStock }
+              : product
+          )
+        );
+        console.log('Stock actualizado exitosamente');
+      } else {
+        throw new Error('Error al actualizar stock');
+      }
+    } catch (error) {
+      console.error('Error al actualizar stock:', error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -52,7 +74,7 @@ export default function HomeScreen() {
           setMostSoldProduct({
             id: featuredProduct.id,
             name: featuredProduct.name,
-            subtitle: 'Producto más vendido este mes'
+            subtitle: `${featuredProduct.totalSold || 0} unidades vendidas`
           });
         }
 
@@ -118,7 +140,12 @@ export default function HomeScreen() {
             <FlatList
               data={lowStockProducts}
               keyExtractor={(item) => item.id}
-              renderItem={({ item }) => <LowStockItem item={item} />}
+              renderItem={({ item }) => (
+                <LowStockItem 
+                  item={item} 
+                  onStockUpdated={handleStockUpdate}
+                />
+              )}
               contentContainerStyle={styles.listContainer}
               showsVerticalScrollIndicator={false}
             />

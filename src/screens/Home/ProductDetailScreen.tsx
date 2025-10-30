@@ -21,7 +21,8 @@ export default function ProductDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [productName, setProductName] = useState('');
   const { user } = useAuthContext();
-  const { productId, name } = useLocalSearchParams();
+  const { id, name } = useLocalSearchParams();
+  const productId = id;
 
   useEffect(() => {
     if (name) {

@@ -9,14 +9,15 @@ import {
   StatusBar,
   FlatList,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { Colors } from '../../shared/config/colors';
 import { useProducts } from './hooks/useProducts';
 import { ProductCard } from './components/ProductCard';
+import { DeleteConfirmationModal } from './components/DeleteConfirmationModal';
 import { Product } from './services/productService';
+import { showToast } from '../../shared/components/Toast';
 
 export default function ProductsScreen() {
   const navigation = useNavigation();
@@ -33,6 +34,9 @@ export default function ProductsScreen() {
   
   const [searchText, setSearchText] = useState('');
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Manejar búsqueda con debounce
   useEffect(() => {
@@ -79,26 +83,33 @@ export default function ProductsScreen() {
   };
 
   const handleDeleteProduct = (product: Product) => {
-    Alert.alert(
-      'Eliminar producto',
-      `¿Estás seguro de que quieres eliminar "${product.name}"?`,
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            const success = await deleteProduct(product.id);
-            if (!success) {
-              Alert.alert('Error', 'No se pudo eliminar el producto');
-            }
-          },
-        },
-      ]
-    );
+    setProductToDelete(product);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+    
+    setDeleting(true);
+    try {
+      const success = await deleteProduct(productToDelete.id);
+      if (success) {
+        showToast.success('Producto eliminado', 'El producto se eliminó correctamente');
+        setDeleteModalVisible(false);
+        setProductToDelete(null);
+      } else {
+        showToast.error('Error', 'No se pudo eliminar el producto');
+      }
+    } catch (error) {
+      showToast.error('Error', 'Error inesperado al eliminar el producto');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalVisible(false);
+    setProductToDelete(null);
   };
 
   const renderProduct = ({ item }: { item: Product }) => (
@@ -193,6 +204,15 @@ export default function ProductsScreen() {
       >
         <Ionicons name="add" size={24} color={Colors.textPrimary} />
       </TouchableOpacity>
+
+      {/* Modal de confirmación de eliminación */}
+      <DeleteConfirmationModal
+        visible={deleteModalVisible}
+        product={productToDelete}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        loading={deleting}
+      />
     </SafeAreaView>
   );
 }

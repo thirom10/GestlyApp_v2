@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ProductService, Product, CreateProductData } from '../services/productService';
+import { ProductService, Product, CreateProductData, UpdateProductData } from '../services/productService';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -69,6 +69,34 @@ export const useProducts = () => {
       return false;
     } catch (err) {
       setError('Error inesperado al crear producto');
+      return false;
+    }
+  }, []);
+
+  // Actualizar producto
+  const updateProduct = useCallback(async (updateData: UpdateProductData): Promise<boolean> => {
+    try {
+      setError(null);
+      
+      const { data, error } = await ProductService.updateProduct(updateData);
+      
+      if (error) {
+        setError(error.message || 'Error al actualizar producto');
+        return false;
+      }
+      
+      if (data) {
+        setProducts(prev => 
+          prev.map(product => 
+            product.id === data.id ? data : product
+          )
+        );
+        return true;
+      }
+      
+      return false;
+    } catch (err) {
+      setError('Error inesperado al actualizar producto');
       return false;
     }
   }, []);
@@ -160,6 +188,7 @@ export const useProducts = () => {
     loadProducts,
     refreshProducts,
     addProduct,
+    updateProduct,
     deleteProduct,
     searchProducts,
     updateStock,
