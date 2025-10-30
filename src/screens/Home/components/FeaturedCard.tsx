@@ -1,16 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { router } from 'expo-router';
 import { Colors } from '../../../shared/config/colors';
 
 interface FeaturedCardProps {
   product: {
+    id?: string;
     name: string;
     subtitle: string;
   };
 }
 
 export function FeaturedCard({ product }: FeaturedCardProps) {
+  const handleNavigateToProductDetail = () => {
+    if (product.id) {
+      router.push({
+        pathname: `/product/${product.id}`,
+        params: { name: product.name }
+      });
+    }
+  };
+
   return (
     <View style={styles.featuredCard}>
       <View style={styles.featuredLeft}>
@@ -22,7 +33,11 @@ export function FeaturedCard({ product }: FeaturedCardProps) {
           <Text style={styles.featuredSubtitle}>{product.subtitle}</Text>
         </View>
       </View>
-      <TouchableOpacity style={styles.smallSquare}>
+      <TouchableOpacity 
+        style={styles.smallSquare}
+        onPress={handleNavigateToProductDetail}
+        disabled={!product.id}
+      >
         <Ionicons name="arrow-forward" size={18} color={Colors.textPrimary} />
       </TouchableOpacity>
     </View>
