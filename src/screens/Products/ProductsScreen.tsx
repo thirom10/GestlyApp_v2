@@ -64,9 +64,18 @@ export default function ProductsScreen() {
     navigation.navigate('AddProduct' as never);
   };
 
+  const handleViewProduct = (product: Product) => {
+    navigation.navigate('AddProduct' as never, { 
+      product, 
+      mode: 'view' 
+    } as never);
+  };
+
   const handleEditProduct = (product: Product) => {
-    // TODO: Implementar pantalla de edición
-    console.log('Editar producto:', product.id);
+    navigation.navigate('AddProduct' as never, { 
+      product, 
+      mode: 'edit' 
+    } as never);
   };
 
   const handleDeleteProduct = (product: Product) => {
@@ -97,6 +106,7 @@ export default function ProductsScreen() {
       product={item}
       onEdit={() => handleEditProduct(item)}
       onDelete={() => handleDeleteProduct(item)}
+      onView={() => handleViewProduct(item)}
     />
   );
 

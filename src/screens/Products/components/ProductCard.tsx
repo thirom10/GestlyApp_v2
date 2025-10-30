@@ -1,11 +1,11 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
+  Text,
   TouchableOpacity,
+  View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../shared/config/colors';
 import { Product } from '../services/productService';
 
@@ -14,6 +14,7 @@ interface ProductCardProps {
   onPress?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onView?: () => void;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -21,6 +22,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onPress,
   onEdit,
   onDelete,
+  onView,
 }) => {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-AR', {
@@ -60,7 +62,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <TouchableOpacity
       style={styles.container}
-      onPress={onPress}
+      onPress={onView || onPress}
       activeOpacity={0.8}
     >
       {/* Lápiz en esquina superior derecha */}
@@ -70,7 +72,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           onPress={onEdit}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="pencil" size={16} color={Colors.textSecondary} />
+          {/* Cambiar icono */}
+          <Ionicons name="color-wand" size={16} color={Colors.textPrimary} />
         </TouchableOpacity>
       )}
 
@@ -151,7 +154,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.backgroundSecondary,
     borderRadius: 12,
-    marginHorizontal: 20,
+    marginHorizontal: 0,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -172,7 +175,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: 'rgba(50, 150, 255, 1)',
   },
 
   header: {
