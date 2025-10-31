@@ -11,7 +11,7 @@ interface LowStockItemProps {
     remain: number;
     icon: string;
   };
-  onStockUpdated: (productId: string, newStock: number) => Promise<void>;
+  onStockUpdated: (productId: string, addedQuantity: number) => Promise<void>;
 }
 
 export function LowStockItem({ item, onStockUpdated }: LowStockItemProps) {
@@ -22,11 +22,10 @@ export function LowStockItem({ item, onStockUpdated }: LowStockItemProps) {
     setModalVisible(true);
   };
 
-  const handleConfirmRestock = async (quantity: number) => {
+  const handleConfirmRestock = async (addedQuantity: number) => {
     setLoading(true);
     try {
-      const newStock = item.remain + quantity;
-      await onStockUpdated(item.id, newStock);
+      await onStockUpdated(item.id, addedQuantity);
       setModalVisible(false);
     } catch (error) {
       console.error('Error al actualizar stock:', error);

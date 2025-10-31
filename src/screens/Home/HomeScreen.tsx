@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    SafeAreaView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  FlatList,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { Colors } from '../../shared/config/colors';
 import { useAuthContext } from '../../shared/context/AuthContext';
@@ -17,12 +17,19 @@ import { homeService } from './homeService';
 export default function HomeScreen() {
   const { user } = useAuthContext();
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<{ id: string; label: string; value: string; change: number; positive: boolean }[]>([]);
+  const [stats, setStats] = useState<{ id: string; label: string; value: string }[]>([]);
   const [mostSoldProduct, setMostSoldProduct] = useState<{ id?: string; name: string; subtitle: string } | null>(null);
   const [lowStockProducts, setLowStockProducts] = useState<{ id: string; name: string; remain: number; icon: string }[]>([]);
 
-  const handleStockUpdate = async (productId: string, newStock: number) => {
+  const handleStockUpdate = async (productId: string, addedQuantity: number) => {
     try {
+      // Encontrar el producto actual para obtener su stock
+      const currentProduct = lowStockProducts.find(p => p.id === productId);
+      if (!currentProduct) {
+        throw new Error('Producto no encontrado');
+      }
+      
+      const newStock = currentProduct.remain + addedQuantity;
       const success = await homeService.updateProductStock(productId, newStock);
       if (success) {
         // Actualizar el estado local
@@ -54,17 +61,13 @@ export default function HomeScreen() {
         setStats([
           { 
             id: '1', 
-            label: 'Ganancias (Mes)', 
-            value: `$${statsData.monthlyRevenue.toFixed(2)}`, 
-            change: statsData.monthlyChange, 
-            positive: statsData.monthlyChange >= 0 
+            label: 'Promedio por Venta (Mes)', 
+            value: `$${statsData.monthlyAverage.toFixed(2)}`
           },
           { 
             id: '2', 
-            label: 'Ganancias (Semana)', 
-            value: `$${statsData.weeklyRevenue.toFixed(2)}`, 
-            change: statsData.weeklyChange, 
-            positive: statsData.weeklyChange >= 0 
+            label: 'Promedio por Venta (Semana)', 
+            value: `$${statsData.weeklyAverage.toFixed(2)}`
           },
         ]);
 
