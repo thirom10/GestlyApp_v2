@@ -21,8 +21,15 @@ export default function HomeScreen() {
   const [mostSoldProduct, setMostSoldProduct] = useState<{ id?: string; name: string; subtitle: string } | null>(null);
   const [lowStockProducts, setLowStockProducts] = useState<{ id: string; name: string; remain: number; icon: string }[]>([]);
 
-  const handleStockUpdate = async (productId: string, newStock: number) => {
+  const handleStockUpdate = async (productId: string, addedQuantity: number) => {
     try {
+      // Encontrar el producto actual para obtener su stock
+      const currentProduct = lowStockProducts.find(p => p.id === productId);
+      if (!currentProduct) {
+        throw new Error('Producto no encontrado');
+      }
+      
+      const newStock = currentProduct.remain + addedQuantity;
       const success = await homeService.updateProductStock(productId, newStock);
       if (success) {
         // Actualizar el estado local

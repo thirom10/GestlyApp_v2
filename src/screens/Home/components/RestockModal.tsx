@@ -1,19 +1,18 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  TextInput,
   Alert,
+  Dimensions,
   KeyboardAvoidingView,
+  Modal,
   Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../shared/config/colors';
 
 interface RestockModalProps {
@@ -23,7 +22,7 @@ interface RestockModalProps {
     name: string;
     stock: number;
   } | null;
-  onConfirm: (newStock: number) => void;
+  onConfirm: (addedQuantity: number) => void;
   onCancel: () => void;
   loading?: boolean;
 }
@@ -46,8 +45,7 @@ export const RestockModal: React.FC<RestockModalProps> = ({
       return;
     }
     
-    const newStock = product.stock + addAmount;
-    onConfirm(newStock);
+    onConfirm(addAmount);
     setStockToAdd('');
   };
 
@@ -64,87 +62,88 @@ export const RestockModal: React.FC<RestockModalProps> = ({
       onRequestClose={handleCancel}
       statusBarTranslucent
     >
-      <KeyboardAvoidingView 
-        style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.overlay}>
-            <TouchableWithoutFeedback onPress={() => {}}>
-              <View style={styles.modalContainer}>
-          {/* Header con icono de restock */}
-          <View style={styles.header}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="add-circle" size={32} color={Colors.primary} />
+      <View style={styles.overlay}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingView}
+        >
+          <Pressable 
+            style={styles.overlayTouchable}
+            onPress={handleCancel}
+          >
+            <View style={styles.modalContainer} onStartShouldSetResponder={() => true}>
+              {/* Header con icono de restock */}
+              <View style={styles.header}>
+                <View style={styles.iconContainer}>
+                  <Ionicons name="add-circle" size={32} color={Colors.primary} />
+                </View>
+                <Text style={styles.title}>Reponer Stock</Text>
+              </View>
+
+              {/* Contenido */}
+              <View style={styles.content}>
+                <Text style={styles.message}>
+                  Producto: <Text style={styles.productName}>"{product.name}"</Text>
+                </Text>
+                <Text style={styles.currentStock}>
+                  Stock actual: {product.stock} unidades
+                </Text>
+                
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Cantidad a agregar:</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={stockToAdd}
+                    onChangeText={setStockToAdd}
+                    placeholder="Ej: 10"
+                    keyboardType="numeric"
+                    placeholderTextColor={Colors.textSecondary}
+                    editable={!loading}
+                    autoFocus={true}
+                    selectTextOnFocus={true}
+                    blurOnSubmit={false}
+                    returnKeyType="done"
+                    onSubmitEditing={handleConfirm}
+                  />
+                </View>
+
+                {stockToAdd && !isNaN(parseInt(stockToAdd)) && parseInt(stockToAdd) > 0 && (
+                  <Text style={styles.newStockPreview}>
+                    Nuevo stock: {product.stock + parseInt(stockToAdd)} unidades
+                  </Text>
+                )}
+              </View>
+
+              {/* Botones */}
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={[styles.button, styles.cancelButton]}
+                  onPress={handleCancel}
+                  disabled={loading}
+                >
+                  <Text style={styles.cancelButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.button, styles.confirmButton, loading && styles.buttonDisabled]}
+                  onPress={handleConfirm}
+                  disabled={loading || !stockToAdd || isNaN(parseInt(stockToAdd)) || parseInt(stockToAdd) <= 0}
+                >
+                  <Ionicons 
+                    name="checkmark" 
+                    size={16} 
+                    color={Colors.textPrimary} 
+                    style={styles.buttonIcon}
+                  />
+                  <Text style={styles.confirmButtonText}>
+                    {loading ? 'Actualizando...' : 'Confirmar'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <Text style={styles.title}>Reponer Stock</Text>
-          </View>
-
-          {/* Contenido */}
-          <View style={styles.content}>
-            <Text style={styles.message}>
-              Producto: <Text style={styles.productName}>"{product.name}"</Text>
-            </Text>
-            <Text style={styles.currentStock}>
-              Stock actual: {product.stock} unidades
-            </Text>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Cantidad a agregar:</Text>
-              <TextInput
-                style={styles.input}
-                value={stockToAdd}
-                onChangeText={setStockToAdd}
-                placeholder="Ej: 10"
-                keyboardType="numeric"
-                placeholderTextColor={Colors.textSecondary}
-                editable={!loading}
-                autoFocus={true}
-                selectTextOnFocus={true}
-                blurOnSubmit={false}
-                returnKeyType="done"
-                onSubmitEditing={handleConfirm}
-              />
-            </View>
-
-            {stockToAdd && !isNaN(parseInt(stockToAdd)) && parseInt(stockToAdd) > 0 && (
-              <Text style={styles.newStockPreview}>
-                Nuevo stock: {product.stock + parseInt(stockToAdd)} unidades
-              </Text>
-            )}
-          </View>
-
-          {/* Botones */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={handleCancel}
-              disabled={loading}
-            >
-              <Text style={styles.cancelButtonText}>Cancelar</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, styles.confirmButton, loading && styles.buttonDisabled]}
-              onPress={handleConfirm}
-              disabled={loading || !stockToAdd || isNaN(parseInt(stockToAdd)) || parseInt(stockToAdd) <= 0}
-            >
-              <Ionicons 
-                name="checkmark" 
-                size={16} 
-                color={Colors.textPrimary} 
-                style={styles.buttonIcon}
-              />
-              <Text style={styles.confirmButtonText}>
-                {loading ? 'Actualizando...' : 'Confirmar'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
+          </Pressable>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 };
@@ -154,24 +153,32 @@ const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: Colors.overlay,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  keyboardAvoidingView: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+  },
+  overlayTouchable: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContainer: {
     backgroundColor: Colors.backgroundSecondary,
     borderRadius: 16,
-    width: Math.min(width - 40, 400),
-    maxWidth: '100%',
-    elevation: 10,
+    margin: 20,
+    maxWidth: 400,
+    width: '90%',
+    elevation: 5,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 10,
+      height: 2,
     },
     shadowOpacity: 0.25,
-    shadowRadius: 20,
+    shadowRadius: 3.84,
   },
   header: {
     alignItems: 'center',
