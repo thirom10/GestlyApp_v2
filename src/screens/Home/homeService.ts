@@ -24,6 +24,8 @@ export interface HomeStats {
   weeklyChange: number;
   monthlyRevenue: number;
   monthlyChange: number;
+  weeklyAverage: number;
+  monthlyAverage: number;
 }
 
 export const homeService = {
@@ -239,15 +241,24 @@ export const homeService = {
           weeklyRevenue: 0,
           weeklyChange: 0,
           monthlyRevenue: 0,
-          monthlyChange: 0
+          monthlyChange: 0,
+          weeklyAverage: 0,
+          monthlyAverage: 0
         };
       }
 
-      // Calcular ingresos
+      // Calcular ingresos totales
       const weeklyRevenue = weekSales?.reduce((sum, sale) => sum + (sale.total_amount || 0), 0) || 0;
       const lastWeekRevenue = lastWeekSales?.reduce((sum, sale) => sum + (sale.total_amount || 0), 0) || 0;
       const monthlyRevenue = monthSales?.reduce((sum, sale) => sum + (sale.total_amount || 0), 0) || 0;
       const lastMonthRevenue = lastMonthSales?.reduce((sum, sale) => sum + (sale.total_amount || 0), 0) || 0;
+
+      // Calcular promedios
+      const weekSalesCount = weekSales?.length || 0;
+      const monthSalesCount = monthSales?.length || 0;
+      
+      const weeklyAverage = weekSalesCount > 0 ? weeklyRevenue / weekSalesCount : 0;
+      const monthlyAverage = monthSalesCount > 0 ? monthlyRevenue / monthSalesCount : 0;
 
       // Calcular cambios porcentuales
       const weeklyChange = lastWeekRevenue === 0 
@@ -265,6 +276,8 @@ export const homeService = {
         monthlyRevenue,
         lastMonthRevenue,
         monthlyChange,
+        weeklyAverage,
+        monthlyAverage,
         weekSalesCount: weekSales?.length || 0,
         monthSalesCount: monthSales?.length || 0
       });
@@ -273,7 +286,9 @@ export const homeService = {
         weeklyRevenue,
         weeklyChange,
         monthlyRevenue,
-        monthlyChange
+        monthlyChange,
+        weeklyAverage,
+        monthlyAverage
       };
     } catch (error) {
       console.error('Error inesperado:', error);
@@ -281,7 +296,9 @@ export const homeService = {
         weeklyRevenue: 0,
         weeklyChange: 0,
         monthlyRevenue: 0,
-        monthlyChange: 0
+        monthlyChange: 0,
+        weeklyAverage: 0,
+        monthlyAverage: 0
       };
     }
   },
