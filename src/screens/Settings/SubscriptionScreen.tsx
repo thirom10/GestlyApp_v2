@@ -14,17 +14,7 @@ export default function SubscriptionScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Gestionar Suscripción</Text>
-      </View>
-
-      <View style={styles.content}>
-        <Text style={styles.text}>Contenido de Suscripción</Text>
+        <Text style={styles.text}>Aqui aparecera información acerca de la suscripción.</Text>
       </View>
     </SafeAreaView>
   );

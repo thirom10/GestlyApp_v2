@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,18 +11,37 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Colors } from '../../shared/config/colors';
 import { useProducts } from './hooks/useProducts';
 import { WeightUnitPicker } from './components/WeightUnitPicker';
 import { DatePicker } from './components/DatePicker';
 import { showToast } from '../../shared/components/Toast';
+import { Product } from './services/productService';
 
 export default function AddProductScreen() {
   const navigation = useNavigation();
-  const { addProduct, loading } = useProducts();
+  const route = useRoute();
+  const { 
+    addProduct, 
+    updateProduct, 
+    refreshProducts,
+    loading: productsLoading, 
+    error: productsError 
+  } = useProducts();
+  
+  // Obtener parámetros de la ruta
+  const params = route.params as { 
+    product?: Product, 
+    mode?: 'view' | 'edit' | 'create' 
+  } || {};
+  
+  const mode = params.mode || 'create';
+  const isViewMode = mode === 'view';
+  const isEditMode = mode === 'edit';
   
   // Estados del formulario
   const [formData, setFormData] = useState({
@@ -36,9 +55,42 @@ export default function AddProductScreen() {
     branch: '',
   });
   
+  // Cargar datos del producto si estamos en modo edición o visualización
+  useEffect(() => {
+    if (params.product && (isEditMode || isViewMode)) {
+      const product = params.product;
+      setFormData({
+        name: product.name || '',
+        stock: product.stock?.toString() || '',
+        purchasePrice: product.purchase_price?.toString() || '',
+        salePrice: product.sale_price?.toString() || '',
+        netWeight: product.net_weight?.toString() || '',
+        weightUnit: product.weight_unit,
+        purchaseDate: product.purchase_date ? new Date(product.purchase_date) : undefined,
+        branch: product.branch || '',
+      });
+    }
+  }, [params.product, isEditMode, isViewMode]);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Validar formulario
+  // Manejar cambios en los campos del formulario
+  const handleChange = (field: string, value: any) => {
+    if (isViewMode) return; // No permitir cambios en modo visualización
+    
+    setFormData({
+      ...formData,
+      [field]: value,
+    });
+    
+    // Limpiar error del campo
+    if (errors[field]) {
+      setErrors({
+        ...errors,
+        [field]: '',
+      });
+    }
+  };
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -68,6 +120,11 @@ export default function AddProductScreen() {
 
   // Manejar envío del formulario
   const handleSubmit = async () => {
+    if (isViewMode) {
+      navigation.goBack();
+      return;
+    }
+    
     if (!validateForm()) {
       showToast.error('Error en el formulario', 'Por favor, corrige los errores en el formulario');
       return;
@@ -85,16 +142,34 @@ export default function AddProductScreen() {
         branch: formData.branch.trim() || undefined,
       };
 
-      const success = await addProduct(productData);
+      let success = false;
       
-      if (success) {
+      if (isEditMode && params.product) {
+        success = await updateProduct({
+          id: params.product.id,
+          ...productData
+        });
+        
+        if (success) {
+          showToast.success('Producto actualizado', 'Producto actualizado exitosamente');
+          await refreshProducts(); // Actualizar la lista de productos
+          navigation.navigate('ProductsList' as never);
+        } else {
+          showToast.error('Error', 'Error al actualizar el producto');
+        }
+      } else {
+        success = await addProduct(productData);
+        
+        if (success) {
           showToast.success('Producto agregado', 'Producto agregado exitosamente');
-          navigation.goBack();
+          await refreshProducts(); // Actualizar la lista de productos
+          navigation.navigate('ProductsList' as never);
         } else {
           showToast.error('Error', 'Error al agregar el producto');
         }
+      }
     } catch (error) {
-      showToast.error('Error', 'Error inesperado al agregar el producto');
+      showToast.error('Error', 'Error inesperado al procesar el producto');
     }
   };
 
@@ -114,13 +189,9 @@ export default function AddProductScreen() {
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Agregar Producto</Text>
+        <Text style={styles.headerTitle}>
+          {isViewMode ? 'Detalles del Producto' : isEditMode ? 'Editar Producto' : 'Nuevo Producto'}
+        </Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -137,12 +208,13 @@ export default function AddProductScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Nombre del producto *</Text>
             <TextInput
-              style={[styles.input, errors.name && styles.inputError]}
+              style={[styles.input, errors.name && styles.inputError, isViewMode && styles.inputDisabled]}
               placeholder="Ej: Coca Cola 500ml"
               placeholderTextColor={Colors.textPlaceholder}
               value={formData.name}
               onChangeText={(text) => updateField('name', text)}
               maxLength={255}
+              editable={!isViewMode}
             />
             {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
           </View>
@@ -151,13 +223,14 @@ export default function AddProductScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Stock *</Text>
             <TextInput
-              style={[styles.input, errors.stock && styles.inputError]}
+              style={[styles.input, errors.stock && styles.inputError, isViewMode && styles.inputDisabled]}
               placeholder="0"
               placeholderTextColor={Colors.textPlaceholder}
               value={formData.stock}
               onChangeText={(text) => updateField('stock', text.replace(/[^0-9]/g, ''))}
               keyboardType="numeric"
               maxLength={10}
+              editable={!isViewMode}
             />
             {errors.stock && <Text style={styles.errorText}>{errors.stock}</Text>}
           </View>
@@ -167,13 +240,14 @@ export default function AddProductScreen() {
             <View style={[styles.inputGroup, styles.priceInput]}>
               <Text style={styles.label}>Precio de compra *</Text>
               <TextInput
-                style={[styles.input, errors.purchasePrice && styles.inputError]}
+                style={[styles.input, errors.purchasePrice && styles.inputError, isViewMode && styles.inputDisabled]}
                 placeholder="0.00"
                 placeholderTextColor={Colors.textPlaceholder}
                 value={formData.purchasePrice}
                 onChangeText={(text) => updateField('purchasePrice', text.replace(/[^0-9.]/g, ''))}
                 keyboardType="decimal-pad"
                 maxLength={10}
+                editable={!isViewMode}
               />
               {errors.purchasePrice && <Text style={styles.errorText}>{errors.purchasePrice}</Text>}
             </View>
@@ -181,13 +255,14 @@ export default function AddProductScreen() {
             <View style={[styles.inputGroup, styles.priceInput]}>
               <Text style={styles.label}>Precio de venta *</Text>
               <TextInput
-                style={[styles.input, errors.salePrice && styles.inputError]}
+                style={[styles.input, errors.salePrice && styles.inputError, isViewMode && styles.inputDisabled]}
                 placeholder="0.00"
                 placeholderTextColor={Colors.textPlaceholder}
                 value={formData.salePrice}
                 onChangeText={(text) => updateField('salePrice', text.replace(/[^0-9.]/g, ''))}
                 keyboardType="decimal-pad"
                 maxLength={10}
+                editable={!isViewMode}
               />
               {errors.salePrice && <Text style={styles.errorText}>{errors.salePrice}</Text>}
             </View>
@@ -198,13 +273,14 @@ export default function AddProductScreen() {
             <View style={[styles.inputGroup, styles.weightInput]}>
               <Text style={styles.label}>Peso neto</Text>
               <TextInput
-                style={[styles.input, errors.netWeight && styles.inputError]}
+                style={[styles.input, errors.netWeight && styles.inputError, isViewMode && styles.inputDisabled]}
                 placeholder="0.0"
                 placeholderTextColor={Colors.textPlaceholder}
                 value={formData.netWeight}
                 onChangeText={(text) => updateField('netWeight', text.replace(/[^0-9.]/g, ''))}
                 keyboardType="decimal-pad"
                 maxLength={10}
+                editable={!isViewMode}
               />
             </View>
 
@@ -213,7 +289,7 @@ export default function AddProductScreen() {
               <WeightUnitPicker
                 selectedUnit={formData.weightUnit}
                 onSelectUnit={(unit) => updateField('weightUnit', unit)}
-                disabled={!formData.netWeight}
+                disabled={!formData.netWeight || isViewMode}
               />
             </View>
           </View>
@@ -226,6 +302,7 @@ export default function AddProductScreen() {
               selectedDate={formData.purchaseDate}
               onSelectDate={(date) => updateField('purchaseDate', date)}
               placeholder="Seleccionar fecha (opcional)"
+              disabled={isViewMode}
             />
           </View>
 
@@ -233,25 +310,32 @@ export default function AddProductScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Sucursal</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, isViewMode && styles.inputDisabled]}
               placeholder="Ej: Sucursal Centro (opcional)"
               placeholderTextColor={Colors.textPlaceholder}
               value={formData.branch}
               onChangeText={(text) => updateField('branch', text)}
               maxLength={255}
+              editable={!isViewMode}
             />
           </View>
 
-          {/* Botón de guardar */}
+          {/* Botón de acción */}
           <TouchableOpacity
-            style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+            style={[
+              styles.saveButton,
+              isViewMode ? styles.viewButton : null,
+              productsLoading && styles.saveButtonDisabled
+            ]}
             onPress={handleSubmit}
-            disabled={loading}
+            disabled={productsLoading}
           >
-            {loading ? (
-              <Text style={styles.saveButtonText}>Guardando...</Text>
+            {productsLoading ? (
+              <ActivityIndicator size="small" color={Colors.textPrimary} />
             ) : (
-              <Text style={styles.saveButtonText}>Guardar Producto</Text>
+              <Text style={styles.saveButtonText}>
+                {isViewMode ? 'Volver' : isEditMode ? 'Guardar Cambios' : 'Agregar Producto'}
+              </Text>
             )}
           </TouchableOpacity>
 
@@ -264,6 +348,14 @@ export default function AddProductScreen() {
 }
 
 const styles = StyleSheet.create({
+  // ... otros estilos
+  inputDisabled: {
+    backgroundColor: Colors.backgroundSecondary,
+    color: Colors.textSecondary,
+  },
+  viewButton: {
+    backgroundColor: Colors.secondary,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.background,
